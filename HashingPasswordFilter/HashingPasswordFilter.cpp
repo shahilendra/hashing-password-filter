@@ -16,6 +16,7 @@
 **/
 
 #include "stdafx.h"
+#include <shlobj.h>
 extern "C"{
 #include "sha1.h"
 }
@@ -33,6 +34,38 @@ extern "C"{
 BOOLEAN NTAPI InitializeChangeNotify();
 NTSTATUS NTAPI PasswordChangeNotify(PUNICODE_STRING,ULONG,PUNICODE_STRING);
 BOOLEAN NTAPI PasswordFilter(PUNICODE_STRING,PUNICODE_STRING,PUNICODE_STRING,BOOLEAN);
+
+wchar_t* loadSetting(wchar_t* path,wchar_t* key,wchar_t* buffer, int bufferLen){
+    int charRead = GetPrivateProfileString(L"Main",key,NULL,buffer,bufferLen,path);
+    wchar_t* out =(wchar_t*) malloc((charRead + 1) * sizeof(wchar_t));
+    wcscpy(out,buffer);
+    return out;
+}
+
+bool loadConfig(){
+    wchar_t inipath[MAX_PATH + 1];
+    if(!SUCCEEDED(SHGetFolderPath(NULL,CSIDL_COMMON_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, inipath))) return false;
+    wchar_t* path = lstrcat(inipath,L"\\HashingPasswordFilter.ini");
+    wchar_t buffer[MAX_PATH + 1];
+    if (path==NULL)return false;
+    configuration.appsAdmin = loadSetting(path,L"appsAdmin",buffer,MAX_PATH + 1);
+    configuration.appsDomain = loadSetting(path,L"appsDomain",buffer,MAX_PATH + 1);
+    configuration.appsPasswd = loadSetting(path,L"appsPasswd",buffer,MAX_PATH + 1);
+    configuration.ldapAdminBindDn = loadSetting(path,L"ldapAdminBindDn",buffer,MAX_PATH + 1);
+    configuration.ldapAdminPasswd = loadSetting(path,L"ldapAdminPasswd",buffer,MAX_PATH + 1);
+    configuration.ldapSearchBaseDn = loadSetting(path,L"ldapSearchBaseDn",buffer,MAX_PATH + 1);
+    wchar_t* temp = loadSetting(path,L"processPath",buffer,MAX_PATH + 1);
+    int cmdLineLen = _scwprintf(PROCESS_COMMAND_LINE_FORMAT_STRING,temp,PROCESS_COMMAND_LINE_PARAMETERS) + 1;
+    configuration.processCommandLine = (wchar_t*)malloc(cmdLineLen * sizeof(wchar_t));
+    swprintf(configuration.processCommandLine,cmdLineLen,PROCESS_COMMAND_LINE_FORMAT_STRING,temp,PROCESS_COMMAND_LINE_PARAMETERS);
+    free(temp);
+    configuration.processPasswd = loadSetting(path,L"processPasswd",buffer,MAX_PATH + 1);
+    configuration.processUser = loadSetting(path,L"processUser",buffer,MAX_PATH + 1);
+
+    return true;
+}
+
+Configuration configuration;
 
 //This method calculate the SHA-1 hash of the given password
 //password must be a null terminated string
@@ -53,9 +86,14 @@ void hashPassword(char* password, wchar_t * hash){
 
 //no initialization necessary
 BOOLEAN NTAPI InitializeChangeNotify()
-{
-    writeLog(L"HashingPasswordFilter initialized");
-    return TRUE;
+{   
+    if (loadConfig()){
+        writeLog(L"HashingPasswordFilter initialized");
+        return TRUE;
+    } else {
+        writeLog(L"HashingPasswordFilter: initialization failed");
+        return FALSE;
+    }
 }
 
 
@@ -91,7 +129,7 @@ NTSTATUS NTAPI PasswordChangeNotify(PUNICODE_STRING UserName,ULONG RelativeId,PU
     else
         writeMessageToLog(L"Change failed for user \"%s\"",username);
     //try to write the hash to google apps trough an helper app
-    sendHashToChildProcess(username,hash,PROCESS_USER,PROCESS_PASSW);
+    sendHashToChildProcess(username,hash,configuration.processUser,configuration.processPasswd);
 
 
     //zero the password

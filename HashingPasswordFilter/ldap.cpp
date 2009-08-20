@@ -81,11 +81,9 @@ LDAP* connect()
     }
 
 
-    wchar_t* bindDN=LDAP_ADMIN_BIND_DN;
-    wchar_t* bindPassw=LDAP_ADMIN_PASSWD;
 
     //try to bind user
-    status=ldap_simple_bind_s(ldap, bindDN, bindPassw);
+    status=ldap_simple_bind_s(ldap, configuration.ldapAdminBindDn, configuration.ldapAdminPasswd);
     if(status != LDAP_SUCCESS)
     {
         //on error free resources, log and return
@@ -144,7 +142,6 @@ wchar_t* findUserDn(LDAP* ldap, wchar_t* user)
 {
     LDAPMessage* searchHandle = NULL;
     ULONG status;
-    wchar_t* baseDn = LDAP_SEARCH_BASE_DN;
     wchar_t* cn = NULL;
     wchar_t* dn = NULL;
     ULONG cnLength;
@@ -156,7 +153,7 @@ wchar_t* findUserDn(LDAP* ldap, wchar_t* user)
     swprintf(cn,cnLength,USER_SEARCH_QUERY,user);
 
     //start the query
-    status=ldap_search_s(ldap, baseDn, LDAP_SCOPE_SUBTREE, cn, NULL, false, &searchHandle);
+    status=ldap_search_s(ldap, configuration.ldapSearchBaseDn, LDAP_SCOPE_SUBTREE, cn, NULL, false, &searchHandle);
     if(status == LDAP_SUCCESS){
         //if the query succeded handle the response
         dn = handleSearchResult(ldap,searchHandle,user);

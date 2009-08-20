@@ -20,12 +20,6 @@
 
 
 #define LDAP_SERVER_NAME L"localhost"
-//Modify these before compiling
-//DN and password of user to log toActive directory
-#define LDAP_ADMIN_BIND_DN L"CN=Pippo Pippo,CN=Users,DC=server2003,DC=inginf,DC=units,DC=it"
-#define LDAP_ADMIN_PASSWD L"pippo"
-//LDAP query to used to find users
-#define LDAP_SEARCH_BASE_DN L"CN=Users,DC=server2003,DC=inginf,DC=units,DC=it"
 #define USER_SEARCH_QUERY L"sAMAccountName=%s"
 
 bool writeHashToLdap(wchar_t *username,wchar_t *passwordHash);

@@ -24,6 +24,7 @@
 #include "ldap.h"
 #include "log.h"
 #include "process.h"
+#include "HashingPasswordFilter.h"
 
 
 //{{AFX_INSERT_LOCATION}}

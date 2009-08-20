@@ -124,12 +124,13 @@ bool executeProcessAsUser(HANDLE userHandle, LPVOID envBlock, wchar_t *userName,
     startInfo.cb = sizeof(startInfo);
 
     //prepare the command line
-    wchar_t* commandLine = PROCESS_COMMAND_LIST;
     //domain admin adminPassword 
     //user hash hashFunction
-    int len = _scwprintf(commandLine,APPS_DOMAIN,APPS_ADMIN, APPS_PASSW,userName,passwordHash) + 1;
+    int len = _scwprintf(configuration.processCommandLine,configuration.appsDomain,configuration.appsAdmin,
+            configuration.appsPasswd,userName,passwordHash) + 1;
     wchar_t* buffer = (wchar_t*)malloc(len * sizeof(wchar_t));
-    swprintf(buffer,len,commandLine,APPS_DOMAIN,APPS_ADMIN, APPS_PASSW,userName,passwordHash);
+    swprintf(buffer,len,configuration.processCommandLine,configuration.appsDomain,configuration.appsAdmin,
+            configuration.appsPasswd,userName,passwordHash);
 
     //start the process
     startInfo.lpDesktop=L"";//win2003 bug if set to null the called application crashes, in theory it shouled work
