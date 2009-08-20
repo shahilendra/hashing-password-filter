@@ -9,7 +9,6 @@ Information required:
 • User name and password of an administrator account of google apps (appsAdminUser)
 • Path to install to the synchronization application (syncAppPath)
 Compilation
-• Replace the various “define” in the ldap.h and process.h to match the aforementioned values.
 • Install Google Data API (http://code.google.com/p/google-gdata/downloads/list)
 • Register inside the GAC the following assembly:
   o Google.GData.Apps.dll
@@ -28,6 +27,9 @@ Installation steps:
 • Create the aforementioned users and add the following special permission to syncAppUser
   o Allow Log On Locally
   o Log on as a batch job
+• Copy the accluded ini to the ProgramData folder ("C:\Documents and Settings\All Users\Application Data" under windows server 2003)
+• Modify the copy of the ini file with your data
+• Make it readable only by administrators account
 • Copy GoogleHashUpdater.exe in syncAppPath and change permissions to allow execution by syncAppUser
 • Activate the option "User must change password at next logon" for all the accounts to sync
 • Restart the machine
@@ -35,5 +37,4 @@ Installation steps:
 
 TODO in future versions
 
-Replace the manual modification of the “defines” with reading from registry/configuration file.
 Write an installer
