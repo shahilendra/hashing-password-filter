@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     HINSTANCE hDll;
 
     //Load filter
-    if( !(hDll = LoadLibrary( "HashingPasswordFilter.dll" )) ) {
+    if( !(hDll = LoadLibrary( L"HashingPasswordFilter.dll" )) ) {
         return printf("Cannot load filter");
     }
 
