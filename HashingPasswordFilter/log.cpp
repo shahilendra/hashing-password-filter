@@ -42,7 +42,7 @@ bool writeLog(wchar_t *message) {
 		unsigned int milliseconds=timestamp.wMilliseconds;
 
    FILE* logFile=_wfopen( totalpath, L"a+b" );
-   fwprintf(logFile,L"[%u/%u/%u %u:%u:%u:%u]: %s\r\n",year,month,day,hour,minute,second,milliseconds,message);
+   fwprintf(logFile,L"[%04u/%02u/%02u %02u:%02u:%02u:%03u]:%s\r\n",year,month,day,hour,minute,second,milliseconds,message);
    fclose(logFile);
    return TRUE;
 }
