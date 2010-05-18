@@ -4,27 +4,24 @@ Installation
 
 Information required:
 
-• User name and password of a local, non Administrator, account on the active directory machine (syncAppUser)
+• User name and password of a non Administrator account on the active directory machine (syncAppUser)
 • User name and password of an account with read privilege of the Active directory and write privilege of the custom field “hashedPassword” of the user entries. This privilege can be given sing the “Delegate controls” wizard of the Active Directory Users and Computers" mmc snapin
 • User name and password of an administrator account of google apps (appsAdminUser)
 • Path to install to the synchronization application (syncAppPath)
-Compilation
+
+Prerequisites
 • Install Google Data API (http://code.google.com/p/google-gdata/downloads/list)
-• Register inside the GAC the following assembly:
+• Copy the following files from the Google Data API installation folder to c:\windows\assembly:
   o Google.GData.Apps.dll
   o Google.GData.Client.dll
   o Google.GData.Extensions.dll
-  Using the following command line"gacutil /i filename"
-• Rebuild the solution
 
 Installation steps:
 
-• Using AD schema editor create the attribute "hashedPassword" of type "Case Sensitive String" and add it as an optional field to the “user” class
+• Using AD schema editor (see http://www.setup32.com/network-administration/active-directory/modifying-active-directorys-schema.php) create the attribute "hashedPassword" of type "Case Sensitive String" and add it as an optional field to the “user” class
 • Copy the filter (HashingPasswordFilter.dll) in c:\windows
-• Register the filter by adding the following key to the registry
-  o [HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa]
-  o "Notification Packages"="HashingPasswordFilter" (without the .dll)
-• Create the aforementioned users and add the following special permission to syncAppUser
+• Register the filter using the allegated reg file (HashingPasswordFilter.reg)
+• Create the aforementioned users and add the following special permission to syncAppUser using "Domain Controller Security Policy"
   o Allow Log On Locally
   o Log on as a batch job
 • Copy the accluded ini to the ProgramData folder ("C:\Documents and Settings\All Users\Application Data" under windows server 2003)
