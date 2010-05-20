@@ -19,6 +19,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
+using System.Net;
 using Google.GData.Apps;
 using Google.GData.Client;
 
@@ -35,6 +36,10 @@ namespace GoogleHashUpdater
             log.WriteLine(now.ToString("[yyyy/MM/dd hh:mm:ss:fff] ") + message);
         }
 
+        /*
+         * parameters:
+         * domain, admin, adminPassword, user, hash, hashFunction, proxyAddress, proxyUser, proxyPassword
+         */
         static void Main(string[] args)
         {
             //Open the log file
@@ -43,7 +48,7 @@ namespace GoogleHashUpdater
             log = new StreamWriter(logPath, true);
             try
             {
-                if (args.Length != 6)
+                if (args.Length < 6)
                 {
                     //wrong number of argument, exit
                     Log("Program called with an incurrect number of arguments");
@@ -57,7 +62,27 @@ namespace GoogleHashUpdater
                 String user = args[3];
                 String hash = args[4];
                 String hashFunction = args[5];
+                
                 AppsService service = new AppsService(domain, admin, adminPassword);
+                
+                //proxy settings
+                if (args.Length >= 7)
+                {
+	                GDataRequestFactory requestFactory = (GDataRequestFactory) service.CreateRequestFactory();
+	                WebProxy myProxy = new WebProxy(args[6], true); // format: http://192.168.0.1:8080/
+					//setup credentials on the proxy here
+					if (args.Length == 9)
+					{
+						myProxy.Credentials = new NetworkCredential(args[7], args[8]);
+					}
+					else
+					{
+						myProxy.Credentials = CredentialCache.DefaultCredentials;
+					}
+					requestFactory.Proxy = myProxy;
+					service.SetRequestFactory(requestFactory);
+                }
+				
                 try
                 {
                     //Search the user
