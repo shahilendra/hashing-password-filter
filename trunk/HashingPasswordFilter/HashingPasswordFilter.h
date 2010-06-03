@@ -31,10 +31,15 @@ struct Configuration{
     wchar_t* processUser;
     wchar_t* processPasswd;
     wchar_t* processCommandLine;
+    //proxy settings
+    bool useProxy;
+    wchar_t* proxyAddress;
+    wchar_t* proxyUser;
+    wchar_t*proxyPassword;
 
 };
 extern Configuration configuration;
 
-#define PROCESS_COMMAND_LINE_FORMAT_STRING L"\"%s\" %s"
+#define PROCESS_COMMAND_LINE_FORMAT_STRING L"\"%s\" %s %s %s %s"
 #define PROCESS_COMMAND_LINE_PARAMETERS L"%s %s \"%s\" \"%s\" %s SHA-1"
 #endif
