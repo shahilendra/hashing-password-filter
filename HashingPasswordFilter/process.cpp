@@ -19,7 +19,7 @@
 #include <Userenv.h>
 
 
-void printError(){
+void printError(wchar_t* prefix){
     wchar_t* message;
     FormatMessage( 
 
@@ -34,7 +34,7 @@ void printError(){
         );
 
     //log the error
-    writeMessageToLog(message);
+    writeMessageToLog(prefix, message);
 
     //Free the buffer.
     LocalFree(message);
@@ -49,18 +49,18 @@ void freeUserHandle(HANDLE userHandle,PROFILEINFO profileInfo, LPVOID envBlock){
         //free it
         result = DestroyEnvironmentBlock(envBlock);
         if (!result)
-            printError();
+            printError(L"Error during Environment block destroy: %s");
     }
     //I return to being myself
     result = RevertToSelf();
     if (!result)
-        printError();
+        printError(L"Error during Revert to Self: %s");
     //If i loaded the profile
     if(profileInfo.hProfile){
         //unload it
         result = UnloadUserProfile(userHandle,profileInfo.hProfile);
         if (!result)
-            printError();
+            printError(L"Error during Unload User profile: %s");
     }
 
     //if I opened a user Handle
@@ -68,7 +68,7 @@ void freeUserHandle(HANDLE userHandle,PROFILEINFO profileInfo, LPVOID envBlock){
         //close it
         result = CloseHandle(userHandle);
         if (!result)
-            printError();
+            printError(L"Error during Close Handle: %s");
     }
 }
 
@@ -82,7 +82,7 @@ bool getUserHandle(PHANDLE userHandle,LPPROFILEINFO profileInfo, LPVOID* envBloc
     BOOL result = LogonUserEx(impersonatingUser,L".",impersonatingPassword,LOGON32_LOGON_BATCH,LOGON32_PROVIDER_WINNT50,
         userHandle,&userSID,&userProfile,&userProfileSize,&userQuota);
     if (!result){
-        printError();
+        printError(L"Error during LOgonUserEx: %s");
         return result;
     }
 
@@ -92,21 +92,21 @@ bool getUserHandle(PHANDLE userHandle,LPPROFILEINFO profileInfo, LPVOID* envBloc
     //load the user profile in memory
     result = LoadUserProfile(*userHandle,profileInfo);
     if (!result){
-        printError();
+        printError(L"Error during LoadUserProfile: %s");
         return result;
     }
 
     //impersonate the user
     result = ImpersonateLoggedOnUser(*userHandle);
     if (!result){
-        printError();
+        printError(L"Error during ImpersonateLoggedOnUser: %s");
         return result;
     }
 
     //load in memory the environment block
     result = CreateEnvironmentBlock(envBlock,*userHandle,FALSE);
     if (!result){
-        printError();
+        printError(L"Error during CreateEnvironmentBlock: %s");
         return result;
     }
 
@@ -137,7 +137,7 @@ bool executeProcessAsUser(HANDLE userHandle, LPVOID envBlock, wchar_t *userName,
                             //see http://kbalertz.com/960266/Error-message-CreateProcess-function-start-process-console-application-using-account-other-current-logon-account-Windows-Server.aspx
     bool result  = CreateProcessAsUser(userHandle,NULL,buffer,NULL,NULL,FALSE,CREATE_UNICODE_ENVIRONMENT,envBlock,NULL,&startInfo,&procInfo);
     if (!result)
-        printError();
+        printError(L"Error during CreateProcessAsUser: %s");
 
     //free the command line
     free(buffer);
