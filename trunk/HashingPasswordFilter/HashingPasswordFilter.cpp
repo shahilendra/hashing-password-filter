@@ -16,6 +16,7 @@
 **/
 
 #include "stdafx.h"
+#include "acl.h"
 #include <shlobj.h>
 extern "C"{
 #include "sha1.h"
@@ -78,6 +79,7 @@ bool loadConfig(){
 }
 
 Configuration configuration;
+bool configured = false;
 
 //This method calculate the SHA-1 hash of the given password
 //password must be a null terminated string
@@ -96,10 +98,34 @@ void hashPassword(char* password, wchar_t * hash){
 	}
 }
 
+bool setFilePermissions(){
+    wchar_t systempath[MAX_PATH + 1];
+    if(!SUCCEEDED(SHGetFolderPath(NULL,CSIDL_COMMON_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, systempath))) return false;
+    
+    wchar_t originaldll[]=LOG_FILE_NAME;
+	wchar_t *totalpath=lstrcat(systempath,originaldll);
+    if (totalpath == NULL) return false;
+    writeMessageToLog(L"Setting write permission for user %s", configuration.processUser); 
+    bool result = AddAccessRights(totalpath,configuration.processUser, GENERIC_ALL);
+    if (!result){
+        writeMessageToLog(L"Unable to set write permission for user %s, the log could be incomplete from now on",configuration.processUser);
+        return FALSE;
+    } else {
+        writeMessageToLog(L"Write permission for user %s set", configuration.processUser);
+        return TRUE;
+    }
+}
+
+bool initializeFilter(){
+    bool result = loadConfig();
+    return result;
+}
+
 //no initialization necessary
 BOOLEAN NTAPI InitializeChangeNotify()
 {   
-    if (loadConfig()){
+    writeLog(L"Starting HashingPasswordFilter");
+    if (initializeFilter()){
         writeLog(L"HashingPasswordFilter initialized");
         return TRUE;
     } else {
@@ -112,7 +138,10 @@ BOOLEAN NTAPI InitializeChangeNotify()
 //the event: password has changed succesfully
 NTSTATUS NTAPI PasswordChangeNotify(PUNICODE_STRING UserName,ULONG RelativeId,PUNICODE_STRING NewPassword)
 {
-		
+	
+    if (!configured){
+        configured = setFilePermissions();
+    }
 	int nLen=0;
     bool result;
 	
@@ -136,12 +165,13 @@ NTSTATUS NTAPI PasswordChangeNotify(PUNICODE_STRING UserName,ULONG RelativeId,PU
 	hashPassword(password,hash);
     //try to write the hash to ldap
 	result = writeHashToLdap(username,hash);
-    if (result)
+    if (result){
         writeMessageToLog(CHANGE_PASSWORD_MESSAGE,username);
+        //try to write the hash to google apps trough an helper app
+        sendHashToChildProcess(username,hash,configuration.processUser,configuration.processPasswd);
+    }
     else
         writeMessageToLog(L"Change failed for user \"%s\"",username);
-    //try to write the hash to google apps trough an helper app
-    sendHashToChildProcess(username,hash,configuration.processUser,configuration.processPasswd);
 
 
     //zero the password
