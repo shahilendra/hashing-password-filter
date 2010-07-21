@@ -80,7 +80,17 @@ LDAP* connect()
         return NULL;
     }
 
-
+    //by setting this option, now you can also search from the AD root DN.
+    //why does it works? It's a mistery... 
+    //however, now you can use different OU without having a common root OU.
+    status=ldap_set_option(ldap, LDAP_OPT_REFERRALS, LDAP_OPT_OFF);
+    if(status != LDAP_SUCCESS)
+    {
+        //on error free resources, log and return
+        writeMessageToLog(L"Error setting ldap referrals: %s",ldap_err2string(status));
+        ldap_unbind(ldap);
+        return NULL;
+    }
 
     //try to bind user
     status=ldap_simple_bind_s(ldap, configuration.ldapAdminBindDn, configuration.ldapAdminPasswd);
